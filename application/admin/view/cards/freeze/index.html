@@ -1,0 +1,49 @@
+<style>
+    input::placeholder {
+        /* placeholder颜色  */
+        color: #ff0000;
+        /* placeholder字号  */
+        font-size: 0.14rem;
+    }
+</style>
+<form id="edit-form" class="form-horizontal form-ajax" role="form" data-toggle="validator" method="POST" action="">
+    {:token()}
+    <div class="form-group">
+        <label for="card_number" class="control-label col-xs-12 col-sm-2">卡号:</label>
+        <div class="col-xs-12 col-sm-8">
+            <textarea placeholder="输入下一个卡号前请换行" rows="10" class="form-control"  cols="50" id="card_number" name="card_number" data-rule="required" ></textarea>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">状态:</label>
+        <div class="col-xs-12 col-sm-8">
+            {:build_select('status', $cardStatus, null, ['class'=>'form-control selectpicker', 'data-rule'=>'required'])}
+        </div>
+    </div>
+    <div class="form-group layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button  id="myButton" type="submit" class="btn btn-primary btn-embossed">{:__('OK')}</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    document.addEventListener('keydown', function(event) {
+        var target = event.target || event.srcElement;
+        if (event.keyCode === 13 && target.nodeName === 'INPUT') {
+            event.preventDefault();
+            return false;
+        }
+    });
+</script>
+
+
+<script>
+    document.getElementById('edit-form').addEventListener('submit', function(event) {
+        var btn = document.getElementById('myButton');
+        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> 修改中';
+
+        btn.disabled = true; // 禁用按钮
+    });
+</script>

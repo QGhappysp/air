@@ -1,0 +1,34 @@
+<form id="add-form" class="form-horizontal form-ajax" role="form" data-toggle="validator" method="POST" action="">
+    {:token()}
+    <div class="form-group disabled">
+        <label for="card_id" class="control-label col-xs-12 col-sm-2">card_id:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input readonly value="{$row.card_id|htmlentities}" type="text" class="form-control" id="card_id" name="row[card_id]" data-rule="required" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="nickname" class="control-label col-xs-12 col-sm-2">卡的别名:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input value="{$row.nickname|htmlentities}" type="text" class="form-control" id="nickname" name="row[nickname]" data-rule="required" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label for="amount" class="control-label col-xs-12 col-sm-2">每日限额:</label>
+        <div class="col-xs-12 col-sm-8">
+            <input value="{$row.amount|htmlentities}" type="text" class="form-control" id="amount" name="row[amount]" data-rule="required;" />
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-xs-12 col-sm-2">状态:</label>
+        <div class="col-xs-12 col-sm-8">
+            {:build_select('row[status]', $cardStatus, $selected, ['class'=>'form-control selectpicker', 'data-rule'=>'required'])}
+        </div>
+    </div>
+    <div class="form-group hidden layer-footer">
+        <label class="control-label col-xs-12 col-sm-2"></label>
+        <div class="col-xs-12 col-sm-8">
+            <button type="submit" class="btn btn-primary btn-embossed disabled">{:__('OK')}</button>
+            <button type="reset" class="btn btn-default btn-embossed">{:__('Reset')}</button>
+        </div>
+    </div>
+</form>

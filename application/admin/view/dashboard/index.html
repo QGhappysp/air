@@ -1,0 +1,317 @@
+<script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5.0.0/dist/echarts.min.js"></script>
+<div>
+    <label for="timeRange">选择时间范围：</label>
+    <select id="timeRange">
+        <?php if($isAdmin) {?>
+        <option value="daily">当日消费</option>
+        <option value="yesterday">昨天消费</option>
+        <option value="last7days">近7天消费</option>
+        <option value="thisweek">本周消费</option>
+        <option value="lastweek">上周消费</option>
+        <option selected value="thismonth">本月消费</option>
+        <option value="lastmonth">上月消费</option>
+        <option value="custom">自定义时间消费</option>
+        <?php }else{?>
+        <option value="daily">当日消费</option>
+        <option selected value="thismonth">本月消费</option>
+        <?php }?>
+    </select>
+</div>
+<div id="totalExpense" style="text-align: center; margin-top: 20px; font-weight: bold;"></div>
+<div id="averageExpense" style="text-align: center; margin-top: 10px; font-weight: bold;"></div>
+<div id="barChart" style="width: 900px; height: 400px;"></div>
+
+
+<?php if($isAdmin){?>
+<div>
+    <label for="timeRange2">选择时间范围：</label>
+    <select id="timeRange2">
+        <option value="daily">当日消费</option>
+        <option value="yesterday">昨天消费</option>
+        <option value="last7days">近7天消费</option>
+        <option value="thisweek">本周消费</option>
+        <option value="lastweek">上周消费</option>
+        <option selected value="thismonth">本月消费</option>
+        <option value="lastmonth">上月消费</option>
+        <option value="custom">自定义时间消费</option>
+    </select>
+</div>
+<div id="pieChart" style="width: 900px; height: 400px;"></div>
+<?php }?>
+<script>
+    $(function() {
+        // 初始化柱状图容器
+        var chart = echarts.init(document.getElementById('barChart'));
+
+        // 图表配置项
+        var option = {
+            color: ['#53A8E2'], // 设置柱状图的颜色
+            tooltip: {
+                trigger: 'axis'
+            },
+            legend: {
+                data: ['消费']
+            },
+            xAxis: {
+                data: [],
+                axisLabel: {
+                    rotate: 0
+                }
+            },
+            yAxis: {},
+            series: [{
+                // name: '消费',
+                type: 'bar',
+                barWidth: '30%', // 调整柱子的宽度
+                data: []
+            }]
+        };
+
+        // 初始化图表
+        chart.setOption(option);
+
+        // 监听下拉框选择变化事件
+        $('#timeRange').change(function() {
+            var selectedValue = $(this).val();
+
+            if (selectedValue === 'custom') {
+                // 进行自定义时间选择逻辑
+                var start = prompt("请输入开始日期（格式：YYYY-MM-DD）：");
+                var end = prompt("请输入结束日期（格式：YYYY-MM-DD）：");
+
+                // 发送AJAX请求获取自定义时间范围的数据
+                $.ajax({
+                    type: 'POST',
+                    url: 'dashboard/index',
+                    data: {
+                        timeRange: 'custom',
+                        start: start,
+                        end: end
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        var resultArr = [];
+                        for (let i = 0; i < response.data.length; i++) {
+                            resultArr[i] = response.data[i].toFixed(2);
+                        }
+                        // 更新柱状图数据和x轴标签
+                        chart.setOption({
+                            xAxis: {
+                                data: response.labels
+                            },
+                            series: [{
+                                data: resultArr
+                            }]
+                        });
+                        // 计算并显示总消费
+                        var totalExpense = response.data.reduce((total, amount) => total + amount, 0).toFixed(2);
+                        $('#totalExpense').text(`总消费：$${totalExpense}`);
+
+                        // 计算并显示平均消费
+                        var averageExpense = (totalExpense / response.labels.length).toFixed(2);
+                        $('#averageExpense').text(`平均消费：$${averageExpense}`);
+                    }
+
+
+                });
+            } else {
+                // 发送AJAX请求获取对应时间范围的数据
+                $.ajax({
+                    type: 'POST',
+                    url: 'dashboard/index',
+                    data: {
+                        timeRange: selectedValue
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        var resultArr = [];
+                        for (let i = 0; i < response.data.length; i++) {
+                            resultArr[i] = response.data[i].toFixed(2);
+                        }
+                        // 更新柱状图数据和x轴标签
+                        chart.setOption({
+                            xAxis: {
+                                data: response.labels
+                            },
+                            series: [{
+                                data: resultArr
+                            }]
+                        });
+                        // 计算并显示总消费
+                        var totalExpense = response.data.reduce((total, amount) => total + amount, 0).toFixed(2);
+                        $('#totalExpense').text(`总消费：$${totalExpense}`);
+
+                        // 计算并显示平均消费
+                        var averageExpense = (totalExpense / response.labels.length).toFixed(2);
+                        $('#averageExpense').text(`平均消费：$${averageExpense}`);
+                    }
+                });
+            }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: 'dashboard/index',
+            data: {
+                timeRange: 'thismonth',
+            },
+            dataType: 'json',
+            success: function(response) {
+                var resultArr = [];
+                for (let i = 0; i < response.data.length; i++) {
+                    resultArr[i] = response.data[i].toFixed(2);
+                }
+                // 更新柱状图数据和x轴标签
+                chart.setOption({
+                    xAxis: {
+                        data: response.labels
+                    },
+                    series: [{
+                        data: resultArr
+                    }]
+                });
+                // 计算并显示总消费
+                var totalExpense = response.data.reduce((total, amount) => total + amount, 0).toFixed(2);
+                $('#totalExpense').text(`总消费：$${totalExpense}`);
+
+                // 计算并显示平均消费
+                var averageExpense = (totalExpense / response.labels.length).toFixed(2);
+                $('#averageExpense').text(`平均消费：$${averageExpense}`);
+            }
+        });
+    });
+</script>
+
+<script>
+    $(function() {
+        // 初始化饼状图容器
+        var chart = echarts.init(document.getElementById('pieChart'));
+
+        // 图表配置项
+        var option = {
+            legend: {
+                orient: 'vertical',
+                left: 'left',
+                data: [] // 环状图的图例数据
+            },
+            // 更换为饼状图类型
+            series: [{
+                type: 'pie',
+                radius: '55%',
+                itemStyle: {
+                    color: function(params) {
+                        return [
+                            '#FF6B6B', '#F4B400', '#92D3A0', '#53A8E2', '#9A67EA', '#00AEEF', '#8CC63F', '#FEDD00', '#A5ABEB', '#FFD6D6',
+                            '#FFCE30', '#AADFA3', '#80B8E2', '#C984F1', '#00C4B4', '#FFFF66', '#FFA07A', '#FFB90F', '#BDFCC9', '#FFC0CB',
+                            '#DC143C', '#FFD700', '#FFA500', '#00FFFF', '#7FFFD4', '#FF69B4', '#FFE4E1', '#FFA6C9', '#FFB6C1', '#FFC3A0',
+                            '#FF9966', '#FFABAB', '#FF6F61', '#FF794D', '#FF9F40', '#FFC64B', '#2CD6C4', '#4099FF', '#4170FF', '#00EAFF',
+                            '#FF1A53', '#FF4384', '#FF6EC7', '#FF34FF', '#C495E9', '#FFCCE5', '#FF82AB', '#FFE4FE', '#FF93AF', '#FFC7B2',
+                            '#FFDB58', '#FFAB00', '#FFE464', '#FFCC33', '#FFA500', '#FFC0CB', '#7FFF00', '#00FF00', '#32CD32', '#00FF7F',
+                            '#6B8E23', '#00FF00', '#008000', '#006400', '#ADFF2F', '#9966CC', '#8A2BE2', '#BA55D3', '#FF00FF', '#FF69B4',
+                            '#FF1493', '#FFB6C1', '#FFD700', '#E6E6FA', '#D8BFD8', '#DDA0DD', '#EE82EE', '#9370DB', '#8B008B', '#800080',
+                            '#4B0082', '#6A5ACD', '#483D8B', '#4169E1', '#0000FF', '#0000CD', '#00008B', '#000080', '#191970', '#E9967A',
+                            '#FF4500', '#FF6347', '#FF4500', '#FF7F50', '#FF8C00', '#FFA500', '#FFDAB9', '#FFEFD5', '#FFDEAD', '#FAEBD7',
+                            '#FFE4C4', '#D2B48C', '#FFDAB9', '#CD853F', '#D2691E', '#B8860B', '#F4A460', '#DAA520', '#FFFAF0', '#FFFACD'
+                        ][params.dataIndex];
+                    }
+                }
+                // 配置项省略...
+            }],
+            tooltip: {
+                trigger: 'item',
+                formatter: function(params) {
+                    return params.value + ' (' + params.percent + '%)';
+                }
+            },
+            // color: ['#FF6B6B', '#F4B400', '#92D3A0', '#53A8E2', '#9A67EA'], // 设置饼状图的颜色
+        };
+
+        // 初始化图表
+        chart.setOption(option);
+
+        // 监听下拉框选择变化事件
+        $('#timeRange2').change(function() {
+            var selectedValue = $(this).val();
+
+            if (selectedValue === 'custom') {
+                // 进行自定义时间选择逻辑
+                var start = prompt("请输入开始日期（格式：YYYY-MM-DD）：");
+                var end = prompt("请输入结束日期（格式：YYYY-MM-DD）：");
+
+                // 发送AJAX请求获取自定义时间范围的数据
+                $.ajax({
+                    type: 'POST',
+                    url: 'dashboard/index',
+                    data: {
+                        timeRange: 'custom',
+                        start: start,
+                        end: end
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        // 更新饼状图数据
+                        chart.setOption({
+                            series: [{
+                                // 数据改为适应饼状图的格式
+                                data: response.data.map(function(item, index) {
+                                    return {
+                                        value: item.toFixed(2),
+                                        name: response.labels[index]
+                                    };
+                                })
+                            }]
+                        });
+                    }
+                });
+            } else {
+                // 发送AJAX请求获取对应时间范围的数据
+                $.ajax({
+                    type: 'POST',
+                    url: 'dashboard/index',
+                    data: {
+                        timeRange: selectedValue
+                    },
+                    dataType: 'json',
+                    success: function(response) {
+                        // 更新饼状图数据
+                        chart.setOption({
+                            series: [{
+                                // 数据改为适应饼状图的格式
+                                data: response.data.map(function(item, index) {
+                                    return {
+                                        value: item.toFixed(2),
+                                        name: response.labels[index]
+                                    };
+                                })
+                            }]
+                        });
+                    }
+                });
+            }
+        });
+
+        $.ajax({
+            type: 'POST',
+            url: 'dashboard/index',
+            data: {
+                timeRange: 'thismonth',
+            },
+            dataType: 'json',
+            success: function(response) {
+                // 更新饼状图数据
+                chart.setOption({
+                    series: [{
+                        // 数据改为适应饼状图的格式
+                        data: response.data.map(function(item, index) {
+                            return {
+                                value: item.toFixed(2),
+                                name: response.labels[index]
+                            };
+                        })
+                    }]
+                });
+            }
+        });
+    });
+</script>
